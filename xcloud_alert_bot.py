@@ -79,7 +79,7 @@ async def buscar_y_enviar_noticia(canal):
         if not link:
             print("No se encontró el enlace de la noticia.")
             return
-
+        
         # Google News usa URLs relativas, así que las completamos
         url_noticia = "https://news.google.com" + link['href']
 
@@ -87,7 +87,7 @@ async def buscar_y_enviar_noticia(canal):
         titulo = link.text.strip()
         fuente_tag = article.find("div", {"class": "SVJrMe"})
         fuente = fuente_tag.text.strip() if fuente_tag else "Fuente no disponible"
-
+        
         fecha = datetime.now().strftime("%d-%m-%Y %H:%M")
 
         embed = discord.Embed(
@@ -99,7 +99,7 @@ async def buscar_y_enviar_noticia(canal):
         embed.add_field(name="🌐 Fuente", value=f"`{fuente}`", inline=True)
         embed.add_field(name="🔎 Ver más noticias", value=f"[Google News]({URL_BUSQUEDA})", inline=False)
         embed.set_footer(text="🇨🇱 NubeCuliau está al tanto pa’ avisarte 🔔")
-
+        
         await canal.send(embed=embed)
         print("✅ Noticia enviada y canal limpio.")
 
