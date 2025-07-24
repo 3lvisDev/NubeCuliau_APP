@@ -17,8 +17,8 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 ID_CANAL = int(os.getenv("CHANNEL_ID"))
 
-# URL de la noticia
-URL = "https://pisapapeles.net/xbox-cloud-gaming-tendria-su-primer-servidor-en-chile-y-el-mismo-debutaria-pronto/"
+# URL de búsqueda de noticias en Google News
+URL_BUSQUEDA = "https://news.google.com/search?q=xcloud+chile&hl=es-419&gl=CL&ceid=CL:es-419"
 
 # Intents de Discord
 intents = discord.Intents.default()
@@ -31,7 +31,25 @@ client = discord.Client(intents=intents)
 @client.event
 async def on_ready():
     print(f"✅ Bot conectado como {client.user}")
-    await enviar_noticia()
+    # await buscar_y_enviar_noticia() # Comentado para que no se envíe al iniciar
+
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+
+    if message.content.startswith('!noticias'):
+        await buscar_y_enviar_noticia(message.channel)
+    elif message.content.startswith('!ayuda'):
+        embed = discord.Embed(
+            title="Centro de Ayuda de NubeCuliau",
+            description="Aquí tienes una lista de los comandos disponibles:",
+            color=discord.Color.blue()
+        )
+        embed.add_field(name="`!noticias`", value="Busca y muestra la última noticia sobre xCloud en Chile.", inline=False)
+        embed.add_field(name="`!ayuda`", value="Muestra este mensaje de ayuda.", inline=False)
+        embed.set_footer(text="¡Espero que esto te ayude! 😊")
+        await message.channel.send(embed=embed)
 
 async def limpiar_mensajes_antiguos(canal):
     try:
@@ -43,39 +61,46 @@ async def limpiar_mensajes_antiguos(canal):
     except Exception as e:
         print(f"⚠️ Error al eliminar mensajes antiguos: {e}")
 
-async def enviar_noticia():
+async def buscar_y_enviar_noticia(canal):
     try:
-        canal = client.get_channel(ID_CANAL)
-        if canal is None:
-            print(f"⚠️ Canal con ID {ID_CANAL} no encontrado.")
-            return
-
         # Limpiar mensajes anteriores del bot
         await limpiar_mensajes_antiguos(canal)
 
-        response = requests.get(URL)
+        response = requests.get(URL_BUSQUEDA)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        titulo_tag = soup.title
-        titulo = titulo_tag.string.strip() if titulo_tag and titulo_tag.string else "Título no disponible"
+        # Encontrar el enlace de la primera noticia
+        article = soup.find("article")
+        if not article:
+            print("No se encontraron noticias.")
+            return
 
-        resumen_tag = soup.find("meta", property="og:description")
-        resumen = resumen_tag["content"] if resumen_tag else "Resumen no disponible."
+        link = article.find("a", href=True)
+        if not link:
+            print("No se encontró el enlace de la noticia.")
+            return
+
+        # Google News usa URLs relativas, así que las completamos
+        url_noticia = "https://news.google.com" + link['href']
+
+        # Extraer información de la noticia
+        titulo = link.text.strip()
+        fuente_tag = article.find("div", {"class": "SVJrMe"})
+        fuente = fuente_tag.text.strip() if fuente_tag else "Fuente no disponible"
 
         fecha = datetime.now().strftime("%d-%m-%Y %H:%M")
-        fuente = "Pisapapeles"
 
-        mensaje = (
-            f"📢 **¡Nueva Noticia de xCloud en Chile!**\n\n"
-            f"📰 **Título:** [{titulo}]({URL})\n"
-            f"📅 **Fecha:** {fecha}\n"
-            f"🌐 **Fuente:** `{fuente}`\n"
-            f"📝 **Resumen:** {resumen}\n\n"
-            f"[🔎 Ver más noticias en Google News](https://news.google.com/search?q=xcloud+chile&hl=es-419&gl=CL&ceid=CL:es-419)\n"
-            f"\n🇨🇱 NubeCuliau está al tanto pa’ avisarte 🔔"
+        embed = discord.Embed(
+            title=f"📢 ¡Nueva Noticia de xCloud en Chile!",
+            description=f"📰 **[{titulo}]({url_noticia})**",
+            color=discord.Color.green()
         )
+        embed.add_field(name="📅 Fecha", value=fecha, inline=True)
+        embed.add_field(name="🌐 Fuente", value=f"`{fuente}`", inline=True)
+        embed.add_field(name="🔎 Ver más noticias", value=f"[Google News]({URL_BUSQUEDA})", inline=False)
+        embed.set_footer(text="🇨🇱 NubeCuliau está al tanto pa’ avisarte 🔔")
 
-        await canal.send(mensaje)
+        await canal.send(embed=embed)
         print("✅ Noticia enviada y canal limpio.")
 
     except Exception as e:
