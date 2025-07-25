@@ -12,8 +12,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"✅ Bot conectado como {bot.user}")
-    await bot.tree.sync()
-    print("🌐 Comandos slash sincronizados.")
+    guild = discord.Object(id=1129515587119370321)  # Tu servidor de pruebas
+    await bot.tree.sync(guild=guild)
+    print("🌐 Comandos slash sincronizados en el servidor de pruebas.")
 
 @bot.tree.command(name="ayuda", description="Muestra todos los comandos disponibles")
 async def ayuda_command(interaction: discord.Interaction):
