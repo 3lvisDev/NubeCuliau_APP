@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Dashboard</h1>
+    <p>Welcome, {{ user.name }}!</p>
+
+    <h2>Your Servers</h2>
+    <ul>
+        {% for guild in guilds %}
+            <li>
+                {{ guild.guild_id }}
+                <form action="{{ url_for('configure_guild', guild_id=guild.guild_id) }}" method="post" style="display: inline;">
+                    <label for="channel_id">Notification Channel ID:</label>
+                    <input type="text" name="channel_id" value="{{ guild.notification_channel_id or '' }}">
+                    <button type="submit">Save</button>
+                </form>
+            </li>
+        {% else %}
+            <li>You have not invited the bot to any servers yet.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Linked Accounts</h2>
+    <ul>
+        {% for account in linked_accounts %}
+            <li>
+                {{ account.platform }}: {{ account.account_name }}
+                <a href="{{ url_for('remove_account', account_id=account.id) }}">Remove</a>
+            </li>
+        {% else %}
+            <li>You have no linked accounts.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Link New Accounts</h2>
+    <a href="{{ url_for('link_twitch') }}">Link Twitch Account</a>
+    <br>
+    <a href="{{ url_for('link_youtube') }}">Link YouTube Account</a>
+
+</body>
+</html>
