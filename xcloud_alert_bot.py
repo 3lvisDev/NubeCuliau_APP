@@ -33,6 +33,7 @@ async def main():
     await bot.load_extension("bot.cogs.estado")
     await bot.load_extension("bot.cogs.juegos")
     await bot.load_extension("bot.cogs.noticias")
+    await bot.load_extension("bot.cogs.lan_watcher")
     await bot.start(TOKEN)
 
 import asyncio

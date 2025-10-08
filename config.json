@@ -1,0 +1,6 @@
+{
+    "network": "192.168.1.0/24",
+    "intervalSeconds": 60,
+    "discordWebhookUrl": "https://discord.com/api/webhooks/ID/TOKEN",
+    "knownFile": "known_hosts.json"
+}
